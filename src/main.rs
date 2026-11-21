@@ -245,6 +245,7 @@ fn handle_stop() {
 fn handle_statusline() {
     let mut buffer = String::new();
     let _ = io::stdin().read_to_string(&mut buffer);
+    let _ = std::fs::write("/tmp/supercharger-statusline-input.json", &buffer);
     let input: statusline::StatusLineInput = serde_json::from_str(&buffer).unwrap_or_default();
     statusline::render(&input);
 }
