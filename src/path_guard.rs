@@ -38,20 +38,31 @@ pub fn check_path(file_path: &str, workspace_paths: &[String]) -> Option<PathVer
         });
     }
 
-    // 4. Verify boundary: if absolute path, must be inside one of workspace_paths
-    if Path::new(file_path).is_absolute() && !workspace_paths.is_empty() {
-        let is_inside = workspace_paths.iter().any(|ws| {
-            let ws_norm = ws.replace('\\', "/");
-            normalized.starts_with(&ws_norm)
-        });
-        if !is_inside {
-            return Some(PathVerdict {
-                is_fatal: true,
-                reason: format!(
-                    "Path guard: '{}' is outside active workspace boundaries",
-                    file_path
-                ),
+    // 4. Verify boundary: if absolute path, must be inside workspace or allowed system/artifact directories
+    if Path::new(file_path).is_absolute() {
+        // System temp and agent scratch/artifact directories are permitted
+        if normalized.starts_with("/tmp/")
+            || normalized.starts_with("/private/tmp/")
+            || normalized.contains(".gemini/antigravity-cli/brain")
+            || normalized.contains(".gemini/brain")
+        {
+            return None;
+        }
+
+        if !workspace_paths.is_empty() {
+            let is_inside = workspace_paths.iter().any(|ws| {
+                let ws_norm = ws.replace('\\', "/");
+                normalized.starts_with(&ws_norm)
             });
+            if !is_inside {
+                return Some(PathVerdict {
+                    is_fatal: true,
+                    reason: format!(
+                        "Path guard: '{}' is outside active workspace boundaries",
+                        file_path
+                    ),
+                });
+            }
         }
     }
 

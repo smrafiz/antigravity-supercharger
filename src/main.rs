@@ -38,7 +38,10 @@ fn read_stdin() -> HookInput {
 
 fn handle_pre_tool() {
     let input = read_stdin();
-    let workspace_paths = input.workspace_paths.unwrap_or_default();
+    let mut workspace_paths = input.workspace_paths.unwrap_or_default();
+    if let Some(art) = input.artifact_directory_path {
+        workspace_paths.push(art);
+    }
 
     if let Some(tool_call) = input.tool_call {
         let tool_name = tool_call.name.as_str();
