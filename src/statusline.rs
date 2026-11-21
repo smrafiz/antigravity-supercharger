@@ -252,11 +252,9 @@ pub fn calculate_equiv_cost(
     };
 
     let uncached_in = total_in.saturating_sub(cache_read);
-    let cost = (uncached_in as f64 * in_rate / 1_000_000.0)
+    (uncached_in as f64 * in_rate / 1_000_000.0)
         + (cache_read as f64 * cache_rate / 1_000_000.0)
-        + (total_out as f64 * out_rate / 1_000_000.0);
-
-    cost
+        + (total_out as f64 * out_rate / 1_000_000.0)
 }
 
 pub fn render(input: &StatusLineInput) {

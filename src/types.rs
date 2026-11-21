@@ -32,13 +32,7 @@ pub struct ToolCall {
 
 impl ToolCall {
     pub fn get_str_arg(&self, key: &str) -> Option<String> {
-        self.args.as_ref()?.get(key).and_then(|v| {
-            if let Some(s) = v.as_str() {
-                Some(s.to_string())
-            } else {
-                None
-            }
-        })
+        self.args.as_ref()?.get(key).and_then(|v| v.as_str().map(|s| s.to_string()))
     }
 }
 

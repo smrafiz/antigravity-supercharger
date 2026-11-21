@@ -45,7 +45,7 @@ pub fn get_recent_events(cwd: Option<&str>, limit: usize) -> Vec<serde_json::Val
     };
 
     let reader = BufReader::new(file);
-    let lines: Vec<String> = reader.lines().filter_map(|l| l.ok()).collect();
+    let lines: Vec<String> = reader.lines().map_while(Result::ok).collect();
     let start = if lines.len() > limit { lines.len() - limit } else { 0 };
 
     lines[start..]

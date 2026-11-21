@@ -134,7 +134,7 @@ fn handle_pre_tool() {
 
                     // Non-fatal asks: check if full autopilot auto-approves
                     let autopilot = modes::is_autopilot_active(cwd, session_id);
-                    if autopilot.map_or(false, |ap| ap.is_full) {
+                    if autopilot.is_some_and(|ap| ap.is_full) {
                         audit::log_event(
                             Some(cwd),
                             tool_name,
@@ -181,8 +181,7 @@ fn handle_pre_tool() {
                 .or_else(|| tool_call.get_str_arg("Replacement"));
 
             if let Some(content) = content_opt {
-                let findings = code_scanner::scan_content(&content);
-                for finding in findings {
+                if let Some(finding) = code_scanner::scan_content(&content).into_iter().next() {
                     if finding.is_secret {
                         let reason = format!(
                             "Supercharger blocked secret write: {}",
@@ -258,7 +257,7 @@ fn handle_statusline() {
 
 fn handle_autopilot_cli(args: &[String]) {
     let cwd = ".";
-    let first = args.get(0).map(|s| s.as_str()).unwrap_or("status");
+    let first = args.first().map(|s| s.as_str()).unwrap_or("status");
 
     if first == "off" {
         modes::clear_autopilot(cwd, None);
@@ -297,7 +296,7 @@ fn handle_autopilot_cli(args: &[String]) {
 
 fn handle_readonly_cli(args: &[String]) {
     let cwd = ".";
-    let first = args.get(0).map(|s| s.as_str()).unwrap_or("status");
+    let first = args.first().map(|s| s.as_str()).unwrap_or("status");
 
     if first == "off" {
         modes::clear_readonly(cwd, None);
@@ -330,7 +329,7 @@ fn handle_readonly_cli(args: &[String]) {
 
 fn handle_strict_cli(args: &[String]) {
     let cwd = ".";
-    let first = args.get(0).map(|s| s.as_str()).unwrap_or("status");
+    let first = args.first().map(|s| s.as_str()).unwrap_or("status");
 
     if first == "off" {
         modes::clear_strict(cwd, None);
@@ -363,7 +362,7 @@ fn handle_strict_cli(args: &[String]) {
 
 fn handle_economy_cli(args: &[String]) {
     let cwd = ".";
-    let first = args.get(0).map(|s| s.as_str()).unwrap_or("status");
+    let first = args.first().map(|s| s.as_str()).unwrap_or("status");
 
     if first == "status" || args.is_empty() {
         let tier = modes::get_economy_tier(cwd);
@@ -392,7 +391,7 @@ fn handle_economy_cli(args: &[String]) {
 }
 
 fn handle_audit_cli(args: &[String]) {
-    let limit = args.get(0).and_then(|s| s.parse::<usize>().ok()).unwrap_or(15);
+    let limit = args.first().and_then(|s| s.parse::<usize>().ok()).unwrap_or(15);
     let events = audit::get_recent_events(Some("."), limit);
 
     if events.is_empty() {

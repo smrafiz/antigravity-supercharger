@@ -186,10 +186,9 @@ pub fn set_readonly(cwd: &str, session_id: Option<&str>, duration_secs: u64, is_
     };
     let _ = fs::create_dir_all(target_dir);
 
-    let filename = if is_global || session_id.is_none() {
-        ".readonly-until".to_string()
-    } else {
-        format!(".readonly-until-{}", session_id.unwrap())
+    let filename = match (is_global, session_id) {
+        (false, Some(sid)) => format!(".readonly-until-{}", sid),
+        _ => ".readonly-until".to_string(),
     };
     let path = target_dir.join(filename);
     fs::write(&path, until.to_string()).map_err(|e| format!("Failed to write readonly flag: {}", e))?;
@@ -245,10 +244,9 @@ pub fn set_strict(cwd: &str, session_id: Option<&str>, duration_secs: u64, is_gl
     };
     let _ = fs::create_dir_all(target_dir);
 
-    let filename = if is_global || session_id.is_none() {
-        ".strict-until".to_string()
-    } else {
-        format!(".strict-until-{}", session_id.unwrap())
+    let filename = match (is_global, session_id) {
+        (false, Some(sid)) => format!(".strict-until-{}", sid),
+        _ => ".strict-until".to_string(),
     };
     let path = target_dir.join(filename);
     fs::write(&path, until.to_string()).map_err(|e| format!("Failed to write strict flag: {}", e))?;
@@ -330,15 +328,15 @@ pub fn set_autopilot(
     };
     let _ = fs::create_dir_all(target_dir);
 
-    let ap_filename = if is_global || session_id.is_none() {
-        ".autopilot-until".to_string()
-    } else {
-        format!(".autopilot-until-{}", session_id.unwrap())
-    };
-    let full_filename = if is_global || session_id.is_none() {
-        ".autopilot-full".to_string()
-    } else {
-        format!(".autopilot-full-{}", session_id.unwrap())
+    let (ap_filename, full_filename) = match (is_global, session_id) {
+        (false, Some(sid)) => (
+            format!(".autopilot-until-{}", sid),
+            format!(".autopilot-full-{}", sid),
+        ),
+        _ => (
+            ".autopilot-until".to_string(),
+            ".autopilot-full".to_string(),
+        ),
     };
 
     fs::write(target_dir.join(ap_filename), until.to_string())
