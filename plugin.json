@@ -1,0 +1,13 @@
+{
+  "name": "supercharger",
+  "version": "0.1.0",
+  "author": {
+    "name": "smrafiz"
+  },
+  "description": "Ultra-fast shell-level guardrails, code security scanner, secret leak detector, and audit trails for Antigravity CLI written in Rust.",
+  "homepage": "https://github.com/smrafiz/antigravity-supercharger",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smrafiz/antigravity-supercharger"
+  }
+}
