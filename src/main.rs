@@ -72,10 +72,14 @@ fn handle_pre_tool() {
                         input.cwd.as_deref(),
                         tool_name,
                         &path,
-                        true,
+                        verdict.is_fatal,
                         Some(&verdict.reason),
                     );
-                    let decision = PreToolDecision::deny(format!("Supercharger: {}", verdict.reason));
+                    let decision = if verdict.is_fatal {
+                        PreToolDecision::deny(format!("Supercharger: {}", verdict.reason))
+                    } else {
+                        PreToolDecision::ask(format!("Supercharger: {}", verdict.reason))
+                    };
                     println!("{}", serde_json::to_string(&decision).unwrap());
                     return;
                 }

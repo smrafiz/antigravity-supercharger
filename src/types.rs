@@ -99,6 +99,7 @@ impl StopDecision {
         }
     }
 
+    #[allow(dead_code)]
     pub fn continue_loop(reason: impl Into<String>) -> Self {
         Self {
             decision: "continue".to_string(),
