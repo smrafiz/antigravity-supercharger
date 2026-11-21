@@ -1,5 +1,5 @@
-use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::fs::{self, File, OpenOptions};
+use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -29,4 +29,27 @@ pub fn log_event(cwd: Option<&str>, tool: &str, args_preview: &str, blocked: boo
     if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(log_file) {
         let _ = writeln!(file, "{}", event);
     }
+}
+
+pub fn get_recent_events(cwd: Option<&str>, limit: usize) -> Vec<serde_json::Value> {
+    let audit_dir = if let Some(dir) = cwd {
+        Path::new(dir).join(".supercharger")
+    } else {
+        std::env::temp_dir().join(".supercharger")
+    };
+    let log_file = audit_dir.join("audit.jsonl");
+
+    let file = match File::open(log_file) {
+        Ok(f) => f,
+        Err(_) => return Vec::new(),
+    };
+
+    let reader = BufReader::new(file);
+    let lines: Vec<String> = reader.lines().filter_map(|l| l.ok()).collect();
+    let start = if lines.len() > limit { lines.len() - limit } else { 0 };
+
+    lines[start..]
+        .iter()
+        .filter_map(|l| serde_json::from_str::<serde_json::Value>(l).ok())
+        .collect()
 }

@@ -30,6 +30,13 @@
         "command": "./bin/supercharger stop",
         "timeout": 5
       }
+    ],
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "./bin/supercharger session-start",
+        "timeout": 5
+      }
     ]
   }
 }
