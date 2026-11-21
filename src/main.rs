@@ -3,6 +3,7 @@ mod code_scanner;
 mod loop_detector;
 mod path_guard;
 mod safety;
+mod statusline;
 mod types;
 
 use std::io::{self, Read};
@@ -18,11 +19,12 @@ fn main() {
         "pre-tool" => handle_pre_tool(),
         "post-tool" => handle_post_tool(),
         "stop" => handle_stop(),
+        "statusline" => handle_statusline(),
         "version" | "--version" | "-v" => {
             println!("Antigravity Supercharger v{}", VERSION);
         }
         _ => {
-            eprintln!("Usage: supercharger <pre-tool|post-tool|stop|version>");
+            eprintln!("Usage: supercharger <pre-tool|post-tool|stop|statusline|version>");
             std::process::exit(1);
         }
     }
@@ -153,4 +155,11 @@ fn handle_stop() {
     let _input = read_stdin();
     // Default allow stop
     println!("{}", serde_json::to_string(&StopDecision::stop()).unwrap());
+}
+
+fn handle_statusline() {
+    let mut buffer = String::new();
+    let _ = io::stdin().read_to_string(&mut buffer);
+    let input: statusline::StatusLineInput = serde_json::from_str(&buffer).unwrap_or_default();
+    statusline::render(&input);
 }

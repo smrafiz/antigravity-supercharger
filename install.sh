@@ -23,6 +23,26 @@ ln -sfn "$DIR" "$GLOBAL_PLUGINS_DIR/supercharger"
 
 echo "Supercharger linked to $GLOBAL_PLUGINS_DIR/supercharger"
 
+# Configure Antigravity CLI statusline in settings.json
+SETTINGS_FILE="${HOME}/.gemini/antigravity-cli/settings.json"
+if [ -f "$SETTINGS_FILE" ]; then
+  python3 -c "
+import json, os
+path = os.path.expanduser('$SETTINGS_FILE')
+try:
+    with open(path, 'r') as f:
+        data = json.load(f)
+    data['statusLine'] = {
+        'command': os.path.expanduser('$GLOBAL_PLUGINS_DIR/supercharger/bin/supercharger statusline')
+    }
+    with open(path, 'w') as f:
+        json.dump(data, f, indent=2)
+    print('Configured Supercharger statusline in ~/.gemini/antigravity-cli/settings.json')
+except Exception as e:
+    print('Notice: Could not auto-configure statusline in settings.json:', e)
+"
+fi
+
 if command -v agy >/dev/null 2>&1; then
   echo ""
   echo "=== Antigravity Plugin Status ==="
