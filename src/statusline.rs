@@ -351,11 +351,17 @@ pub fn render(input: &StatusLineInput) {
         format!(" {dim}|{reset} {green}⚡ Supercharger: active{reset}")
     };
 
-    // Economy & Output style
-    let mut eco_str = format!(" {dim}|{reset} {dim}Eco:{reset} Minimal {dim}·{reset} Concise");
+    // Economy Tier & Output Style
+    let tier = crate::modes::get_economy_tier(cwd);
+    let capitalized_tier = match tier.as_str() {
+        "standard" => "Standard",
+        "lean" => "Lean",
+        _ => "Minimal",
+    };
+    let mut eco_str = format!(" {dim}|{reset} {dim}Eco:{reset} {capitalized_tier}");
     if let Some(style) = input.output_style.as_ref().and_then(|s| s.name.as_deref()) {
-        if style.to_lowercase() != "default" {
-            eco_str = format!(" {dim}|{reset} {dim}Style:{reset} {style}");
+        if style.to_lowercase() != "default" && style.to_lowercase() != tier {
+            eco_str.push_str(&format!(" {dim}·{reset} {style}"));
         }
     }
 

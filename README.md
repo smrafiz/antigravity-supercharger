@@ -70,6 +70,12 @@ agy plugin list
 # Check Supercharger status and active modes
 supercharger status
 
+# Switch Token Economy tier (controls model verbosity & saves tokens)
+supercharger economy minimal
+supercharger economy lean
+supercharger economy standard
+supercharger economy status
+
 # Auto-approve safe actions for 30 minutes
 supercharger autopilot 30m
 supercharger autopilot 1h --full
@@ -89,6 +95,7 @@ supercharger audit 15
 
 ### Slash Skills (in Antigravity Chat)
 
+- **`/economy`**: Switch prompt verbosity tier (`minimal`, `lean`, `standard`).
 - **`/autopilot`**: Toggle time-boxed auto-approval.
 - **`/readonly`**: Toggle "look, don't touch" mode.
 - **`/strict`**: Toggle strict confirmation prompts.

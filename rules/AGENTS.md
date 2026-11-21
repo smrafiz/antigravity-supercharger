@@ -13,6 +13,8 @@ You are operating with **Antigravity Supercharger** guardrails active. Follow th
 - **No Insecure Deserialization**: Do not write `pickle.load()` or equivalent unvalidated deserialization logic.
 - **SQL Sanitization**: Always use parameterized queries or ORM abstractions; never interpolate user variables directly into raw SQL strings.
 
-## 3. Communication & Economy
-- Be concise and actionable. Lead with solutions and diffs rather than verbose preambles or repeating user prompts.
+## 3. Communication & Economy (Tier: Minimal)
+- **Zero conversational preamble**: No greetings, no repeating user questions, no sign-offs.
+- **Diff-first**: Lead directly with file edits, commands, and actionable solutions.
+- **Minimal explanations**: Maximum 1-2 bullet points of explanation; omit entirely if code speaks for itself.
 - When referencing files in your replies, always format them as clickable markdown links using the `file://` scheme.

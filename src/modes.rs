@@ -58,6 +58,96 @@ pub fn fmt_duration(seconds: u64) -> String {
 }
 
 // -----------------------------------------------------------------------------
+// ECONOMY TIER
+// -----------------------------------------------------------------------------
+
+pub fn get_economy_tier(cwd: &str) -> String {
+    let dirs = get_scope_dirs(cwd);
+    for dir in dirs {
+        let tier_file = dir.join(".economy-tier");
+        if let Ok(content) = fs::read_to_string(tier_file) {
+            let t = content.trim().to_lowercase();
+            if t == "standard" || t == "lean" || t == "minimal" {
+                return t;
+            }
+        }
+    }
+    "minimal".to_string()
+}
+
+pub fn set_economy_tier(cwd: &str, tier: &str, is_global: bool) -> Result<String, String> {
+    let valid_tier = match tier.to_lowercase().as_str() {
+        "standard" => "standard",
+        "lean" => "lean",
+        "minimal" => "minimal",
+        _ => return Err(format!("Invalid tier '{}'. Valid tiers: minimal, lean, standard", tier)),
+    };
+
+    let dirs = get_scope_dirs(cwd);
+    let target_dir = if is_global {
+        dirs.get(1).unwrap_or(&dirs[0])
+    } else {
+        &dirs[0]
+    };
+    let _ = fs::create_dir_all(target_dir);
+    let tier_file = target_dir.join(".economy-tier");
+    fs::write(tier_file, valid_tier).map_err(|e| format!("Failed to write economy tier: {}", e))?;
+
+    update_agents_rule(cwd, valid_tier);
+
+    Ok(valid_tier.to_string())
+}
+
+pub fn update_agents_rule(cwd: &str, tier: &str) {
+    let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+    let possible_rules = [
+        Path::new(cwd).join("rules").join("AGENTS.md"),
+        Path::new(&home).join(".gemini/config/plugins/supercharger/rules/AGENTS.md"),
+    ];
+
+    let economy_instruction = match tier {
+        "standard" => {
+            "## 3. Communication & Economy (Tier: Standard)\n\
+             - Provide descriptive explanations, architecture context, and thorough walkthroughs alongside code solutions.\n\
+             - When referencing files in your replies, always format them as clickable markdown links using the `file://` scheme."
+        }
+        "lean" => {
+            "## 3. Communication & Economy (Tier: Lean)\n\
+             - **Concise & Actionable**: 1-2 brief sentences of context, then direct solutions and diffs.\n\
+             - Avoid unnecessary commentary or step-by-step walkthroughs unless requested.\n\
+             - When referencing files in your replies, always format them as clickable markdown links using the `file://` scheme."
+        }
+        _ => {
+            "## 3. Communication & Economy (Tier: Minimal)\n\
+             - **Zero conversational preamble**: No greetings, no repeating user questions, no sign-offs.\n\
+             - **Diff-first**: Lead directly with file edits, commands, and actionable solutions.\n\
+             - **Minimal explanations**: Maximum 1-2 bullet points of explanation; omit entirely if code speaks for itself.\n\
+             - When referencing files in your replies, always format them as clickable markdown links using the `file://` scheme."
+        }
+    };
+
+    let base_header = "# Antigravity Supercharger Guidelines\n\n\
+        You are operating with **Antigravity Supercharger** guardrails active. Follow these constraints:\n\n\
+        ## 1. Safety & Destructive Actions\n\
+        - **Destructive Commands Blocked**: Never run `rm -rf /`, `mkfs`, fork bombs, or disk wiper commands.\n\
+        - **Git Guardrails**: Never force push (`git push -f` / `--force`) to `main`, `master`, or production branches. Never run `git reset --hard` without verifying with the user first.\n\
+        - **SQL Protection**: Do not execute raw `DROP TABLE` or `DROP DATABASE` queries without explicit confirmation.\n\
+        - **Path Isolation**: Keep all file writes strictly within the designated workspace boundaries. Never write to system paths (`/etc`, `/var`, `/usr`) or credential directories (`~/.ssh`, `~/.aws`).\n\n\
+        ## 2. Code Quality & Security\n\
+        - **No Hardcoded Secrets**: Never commit or write hardcoded API keys, JWTs, AWS credentials, or private keys into code or test files.\n\
+        - **No Insecure Deserialization**: Do not write `pickle.load()` or equivalent unvalidated deserialization logic.\n\
+        - **SQL Sanitization**: Always use parameterized queries or ORM abstractions; never interpolate user variables directly into raw SQL strings.\n\n";
+
+    let full_content = format!("{}{}\n", base_header, economy_instruction);
+
+    for p in possible_rules {
+        if p.exists() {
+            let _ = fs::write(p, &full_content);
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
 // READONLY MODE
 // -----------------------------------------------------------------------------
 
@@ -340,6 +430,23 @@ pub fn is_mutating_command(cmd: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_economy_tier() {
+        let temp_dir = std::env::temp_dir().join("sc_test_eco");
+        let _ = fs::create_dir_all(&temp_dir);
+        let cwd = temp_dir.to_str().unwrap();
+
+        assert_eq!(get_economy_tier(cwd), "minimal");
+        set_economy_tier(cwd, "lean", false).unwrap();
+        assert_eq!(get_economy_tier(cwd), "lean");
+        set_economy_tier(cwd, "standard", false).unwrap();
+        assert_eq!(get_economy_tier(cwd), "standard");
+        set_economy_tier(cwd, "minimal", false).unwrap();
+        assert_eq!(get_economy_tier(cwd), "minimal");
+
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
 
     #[test]
     fn test_mode_lifecycle() {

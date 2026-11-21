@@ -25,6 +25,7 @@ fn main() {
         "autopilot" => handle_autopilot_cli(&args[2..]),
         "readonly" => handle_readonly_cli(&args[2..]),
         "strict" => handle_strict_cli(&args[2..]),
+        "economy" => handle_economy_cli(&args[2..]),
         "audit" => handle_audit_cli(&args[2..]),
         "status" => handle_status_cli(),
         "version" | "--version" | "-v" => {
@@ -50,6 +51,7 @@ fn print_help() {
     println!("  autopilot [dur] [--full] [off|status]  Auto-approve safe actions for a time-box");
     println!("  readonly  [dur] [off|status]           Block file writes and mutating commands");
     println!("  strict    [dur] [off|status]           Prompt on every action (overrides autopilot)");
+    println!("  economy   [minimal|lean|standard]      Switch prompt token economy tier");
     println!("  audit     [limit]                      View recent security and audit log entries");
     println!("  status                                 Display Supercharger health and active modes");
     println!("  version                                Print version");
@@ -359,6 +361,36 @@ fn handle_strict_cli(args: &[String]) {
     }
 }
 
+fn handle_economy_cli(args: &[String]) {
+    let cwd = ".";
+    let first = args.get(0).map(|s| s.as_str()).unwrap_or("status");
+
+    if first == "status" || args.is_empty() {
+        let tier = modes::get_economy_tier(cwd);
+        println!("⚡ Supercharger Economy Tier: \x1b[32m{}\x1b[0m", tier.to_uppercase());
+        match tier.as_str() {
+            "minimal" => println!("  • Minimal: Zero preamble. Direct diffs, edits, and commands only."),
+            "lean" => println!("  • Lean: 1-2 sentence context, then direct solutions and diffs."),
+            "standard" => println!("  • Standard: Balanced, full descriptive context and walkthroughs."),
+            _ => (),
+        }
+        return;
+    }
+
+    let is_global = args.iter().any(|a| a == "--global" || a == "global");
+    match modes::set_economy_tier(cwd, first, is_global) {
+        Ok(t) => {
+            let scope_str = if is_global { "globally" } else { "for this workspace" };
+            println!(
+                "⚡ Supercharger Economy Tier set to \x1b[32m{}\x1b[0m {}.",
+                t.to_uppercase(),
+                scope_str
+            );
+        }
+        Err(e) => eprintln!("Error: {}", e),
+    }
+}
+
 fn handle_audit_cli(args: &[String]) {
     let limit = args.get(0).and_then(|s| s.parse::<usize>().ok()).unwrap_or(15);
     let events = audit::get_recent_events(Some("."), limit);
@@ -407,8 +439,10 @@ fn handle_status_cli() {
     let ap = modes::is_autopilot_active(".", None);
     let ro = modes::is_readonly_active(".", None);
     let st = modes::is_strict_active(".", None);
+    let eco = modes::get_economy_tier(".");
 
     println!("\n\x1b[1mActive Modes:\x1b[0m");
+    println!("  Economy:       \x1b[32m{}\x1b[0m", eco.to_uppercase());
     if let Some(a) = ap {
         let full = if a.is_full { " (full)" } else { "" };
         println!("  Autopilot:     \x1b[32mON{}\x1b[0m ({} left)", full, modes::fmt_duration(a.remaining_seconds));

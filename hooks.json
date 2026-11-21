@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./bin/supercharger pre-tool",
+            "command": "/Users/srafiz/.gemini/config/plugins/supercharger/bin/supercharger pre-tool",
             "timeout": 5
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./bin/supercharger post-tool",
+            "command": "/Users/srafiz/.gemini/config/plugins/supercharger/bin/supercharger post-tool",
             "timeout": 5
           }
         ]
@@ -27,14 +27,14 @@
     "Stop": [
       {
         "type": "command",
-        "command": "./bin/supercharger stop",
+        "command": "/Users/srafiz/.gemini/config/plugins/supercharger/bin/supercharger stop",
         "timeout": 5
       }
     ],
     "SessionStart": [
       {
         "type": "command",
-        "command": "./bin/supercharger session-start",
+        "command": "/Users/srafiz/.gemini/config/plugins/supercharger/bin/supercharger session-start",
         "timeout": 5
       }
     ]
