@@ -15,9 +15,22 @@ echo "=== Testing Supercharger Binary ==="
 ./bin/supercharger version
 
 echo ""
-echo "Antigravity Supercharger built successfully!"
-echo "Binary located at: $DIR/bin/supercharger"
+echo "=== Activating Globally in Antigravity CLI ==="
+GLOBAL_PLUGINS_DIR="${HOME}/.gemini/config/plugins"
+mkdir -p "$GLOBAL_PLUGINS_DIR"
+
+ln -sfn "$DIR" "$GLOBAL_PLUGINS_DIR/supercharger"
+
+echo "Supercharger linked to $GLOBAL_PLUGINS_DIR/supercharger"
+
+if command -v agy >/dev/null 2>&1; then
+  echo ""
+  echo "=== Antigravity Plugin Status ==="
+  agy plugin list || true
+fi
+
 echo ""
-echo "To use this plugin with Antigravity CLI:"
-echo "  1. Project-level: Link or copy this directory into .agents/plugins/supercharger"
-echo "  2. Global-level:  Link or copy this directory into ~/.gemini/config/plugins/supercharger"
+echo "Antigravity Supercharger is now AUTOMATICALLY ACTIVATED in all projects!"
+echo "To disable or uninstall:"
+echo "  agy plugin disable supercharger   # disable without removing"
+echo "  bash uninstall.sh                 # remove global activation"

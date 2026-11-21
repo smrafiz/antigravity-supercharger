@@ -31,34 +31,45 @@ Antigravity CLI (agy)
 
 ---
 
-## Installation & Build
+## Installation & Activation
 
-### Requirements
-- Rust 1.80+ (`cargo`, `rustc`)
-- Antigravity CLI (`agy`)
+### 1-Step Install (Automatic Global Activation across ALL projects)
 
-### Build
 ```bash
 git clone https://github.com/smrafiz/antigravity-supercharger.git
 cd antigravity-supercharger
 bash install.sh
 ```
 
-### Enable in Antigravity CLI
+`install.sh` builds the release binary and links the plugin directly into Antigravity's global customization root (`~/.gemini/config/plugins/supercharger`).
 
-#### Option A: Workspace-specific (Recommended)
-Symlink or copy the directory into your project's `.agents/plugins/` directory:
+Once installed, **it is automatically active in every project and session you run on this machine.**
+
+Verify installation anytime:
 ```bash
-mkdir -p .agents/plugins
-ln -s /path/to/antigravity-supercharger .agents/plugins/supercharger
+agy plugin list
+# Output:
+# Installed plugins:
+# - supercharger (enabled, 0.1.0)
+#     Components: 3 skills, 1 rule, 1 hook
 ```
 
-#### Option B: Global (Applies to all projects)
-Symlink into your global Antigravity config:
-```bash
-mkdir -p ~/.gemini/config/plugins
-ln -s /path/to/antigravity-supercharger ~/.gemini/config/plugins/supercharger
-```
+---
+
+## Management & Toggles
+
+- **Temporarily disable across all projects**:
+  ```bash
+  agy plugin disable supercharger
+  ```
+- **Re-enable**:
+  ```bash
+  agy plugin enable supercharger
+  ```
+- **Uninstall completely**:
+  ```bash
+  bash uninstall.sh
+  ```
 
 ---
 
