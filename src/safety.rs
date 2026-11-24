@@ -70,6 +70,42 @@ fn get_destructive_patterns() -> &'static Vec<(Regex, &'static str, bool)> {
                 "Accessing sensitive user credentials (~/.ssh, ~/.aws, ~/.gnupg) blocked",
                 true,
             ),
+            // Cloud & Infrastructure bulk destruction (fatal or ask)
+            (
+                Regex::new(r"(?i)\b(?:terraform|tofu)\s+destroy\b").unwrap(),
+                "Infrastructure safety: 'terraform/tofu destroy' wipes live infrastructure; blocked",
+                true,
+            ),
+            (
+                Regex::new(r"(?i)\baws\s+(?:ec2\s+terminate-instances|rds\s+delete-db-instance|s3\s+rb\b|s3\s+rm\s+.*--recursive)").unwrap(),
+                "Cloud safety: Destructive AWS resource deletion requires confirmation",
+                false,
+            ),
+            (
+                Regex::new(r"(?i)\bgcloud\s+(?:projects\s+delete|compute\s+instances\s+delete|container\s+clusters\s+delete|sql\s+instances\s+delete)\b").unwrap(),
+                "Cloud safety: Destructive Google Cloud resource deletion requires confirmation",
+                false,
+            ),
+            (
+                Regex::new(r"(?i)\baz\s+(?:group\s+delete|vm\s+delete|aks\s+delete)\b").unwrap(),
+                "Cloud safety: Destructive Azure resource deletion requires confirmation",
+                false,
+            ),
+            (
+                Regex::new(r"(?i)\bkubectl\s+delete\s+(?:namespace|ns|all|nodes?|pv|pvc)\b").unwrap(),
+                "Kubernetes safety: Deleting namespace/critical k8s resource requires confirmation",
+                false,
+            ),
+            (
+                Regex::new(r"(?i)\bhelm\s+(?:uninstall|delete)\b").unwrap(),
+                "Kubernetes safety: Helm release uninstallation requires confirmation",
+                false,
+            ),
+            (
+                Regex::new(r"(?i)\bdocker\s+(?:system\s+prune\s+(?:-a|--all)|volume\s+prune\s+(?:-f|--force))\b").unwrap(),
+                "Container safety: Destructive docker bulk prune requires confirmation",
+                false,
+            ),
         ]
     })
 }
@@ -79,6 +115,11 @@ static GIT_REGEX: OnceLock<Vec<(Regex, &'static str, bool)>> = OnceLock::new();
 fn get_git_patterns() -> &'static Vec<(Regex, &'static str, bool)> {
     GIT_REGEX.get_or_init(|| {
         vec![
+            (
+                Regex::new(r"(?i)\bgit\s+config\s+.*(?:core\.sshCommand|core\.fsmonitor|credential\.helper)\s*=").unwrap(),
+                "Git safety: Modifying git execution hooks/credential helpers blocked",
+                true,
+            ),
             (
                 Regex::new(r"(?i)\bgit\s+push\b.*(?:\b(?:main|master|prod|production)\b.*(?:--force|-f|\+refs)|\b(?:--force|-f|\+refs)\b.*(?:\b(?:main|master|prod|production)\b))").unwrap(),
                 "Git safety: Force-pushing to protected branch (main/master) is strictly blocked",
@@ -158,6 +199,25 @@ mod tests {
         let v = check_command("git reset --hard HEAD~1").unwrap();
         assert!(!v.is_fatal);
         assert!(v.reason.contains("reset --hard"));
+    }
+
+    #[test]
+    fn test_cloud_infra_destruction() {
+        let tf = check_command("terraform destroy -auto-approve").unwrap();
+        assert!(tf.is_fatal);
+        assert!(tf.reason.contains("terraform/tofu destroy"));
+
+        let k8s = check_command("kubectl delete namespace production").unwrap();
+        assert!(!k8s.is_fatal);
+        assert!(k8s.reason.contains("Kubernetes safety"));
+
+        let aws = check_command("aws s3 rb s3://my-bucket --force").unwrap();
+        assert!(!aws.is_fatal);
+        assert!(aws.reason.contains("Cloud safety"));
+
+        let git_hook = check_command("git config core.sshCommand = /tmp/evil").unwrap();
+        assert!(git_hook.is_fatal);
+        assert!(git_hook.reason.contains("execution hooks"));
     }
 
     #[test]
