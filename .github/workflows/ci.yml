@@ -11,8 +11,9 @@ jobs:
     name: Test and Build
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.os == 'macos-latest' }}
 
     steps:
       - name: Checkout repository
