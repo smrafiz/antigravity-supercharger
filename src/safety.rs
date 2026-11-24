@@ -147,6 +147,12 @@ fn get_destructive_patterns() -> &'static Vec<(Regex, &'static str, bool)> {
                 "Container safety: Destructive docker bulk prune requires confirmation",
                 false,
             ),
+            // Verification / Test runner exit status masking (test-mask-guard)
+            (
+                Regex::new(r#"(?i)\b(?:npm\s+(?:run\s+)?test|cargo\s+test|go\s+test|pytest|jest|vitest|mocha|tsc|eslint|ruff|mypy|rspec|ctest)\b.*(?:\s*\|\|\s*(?:true|:|echo\b)|;\s*(?:true|:|exit\s+0)|\s*\|\|\s*exit\s+0)"#).unwrap(),
+                "Verification safety: Masking test/lint runner exit status (e.g. '|| true' or '; exit 0') hides failures; requires confirmation",
+                false,
+            ),
         ]
     })
 }
@@ -311,6 +317,14 @@ mod tests {
         let git_cred = check_command("git clone https://bot:secret_pass@github.com/org/repo.git").unwrap();
         assert!(git_cred.is_fatal);
         assert!(git_cred.reason.contains("Plaintext credentials"));
+
+        let test_mask = check_command("pytest tests/ || true").unwrap();
+        assert!(!test_mask.is_fatal);
+        assert!(test_mask.reason.contains("Verification safety"));
+
+        let test_mask2 = check_command("cargo test ; exit 0").unwrap();
+        assert!(!test_mask2.is_fatal);
+        assert!(test_mask2.reason.contains("Verification safety"));
     }
 
     #[test]

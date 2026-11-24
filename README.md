@@ -19,10 +19,13 @@
   - **Economy (`supercharger economy [minimal|lean|standard]`)**: Switches model prompt verbosity tier with dynamic rule injection.
 - **Safety & Guardrails**:
   - **Destructive Command Guard**: Blocks `rm -rf /`, `mkfs`, fork bombs, SQL database drops, and reverse shells (`nc -e`, `/dev/tcp/`).
+  - **Test Mask Guard**: Intercepts shell test masking (`npm test || true`, `pytest || exit 0`, `cargo test ; true`) that hides failures.
   - **Cloud & IaC Protection**: Intercepts `terraform destroy`, AWS EC2/RDS/S3 bulk delete, GCP project/compute deletion, Azure resource group wipe, and Kubernetes namespace removal.
   - **Git Guardrails**: Blocks force-pushes to `main`/`master`, warns on `git reset --hard`, `git commit --amend`, and `git commit/push --no-verify`.
   - **File Clobbering & Exfiltration**: Intercepts shell redirection truncation (`> file.rs`, `truncate -s 0`) and credential exfiltration via `curl`/`wget`.
-  - **Secret Scanner**: Real-time scanning & redaction of API keys (AWS, OpenAI, GitHub, Slack, Private Keys).
+  - **Secret Scanner**: Real-time scanning & redaction of API keys (AWS, OpenAI, GitHub, Slack, Private Keys, JWTs).
+  - **Supply-Chain & Workflow PWN Defense**: Flags `pull_request_target` untrusted PR head checkout vulnerabilities and malicious lifecycle scripts in `package.json`.
+  - **Test Integrity Guard**: Detects test suite skip markers (`.skip`, `@pytest.mark.skip`, `#[ignore]`) that bypass test verification.
   - **Prompt Injection Defense**: Scans tool outputs and file edits for adversarial tags (`<IMPORTANT>`, `<SYSTEM>`) and instruction overrides (`ignore all previous instructions`).
   - **Loop Detector**: Intercepts repetitive agent cycles (3 identical tool calls in 30 seconds).
 
@@ -61,7 +64,7 @@ supercharger cache-clear                # Purge local audit trails and temporary
 
 ---
 
-## Skills Catalog (32 Skills Available)
+## Skills Catalog (39 Skills Available)
 
 | Skill | Description |
 |---|---|
@@ -73,15 +76,19 @@ supercharger cache-clear                # Purge local audit trails and temporary
 | **cleanup** | Repository hygiene, stale branch cleanup, and cache pruning |
 | **de-ai** | Strip AI buzzwords and robotic corporate filler from text and PRs |
 | **design** | Structured architecture and system design review |
+| **design-review** | UI review for WCAG 2.2 AA contrast, visual hierarchy, and 3 viewports |
 | **devlog** | Structured development logs capturing decisions and changes |
 | **doctor** | Diagnostic health check of Supercharger binary and hooks |
 | **economy** | Switch token economy tier (minimal, lean, standard) |
 | **estimate** | Context window headroom and equivalent API cost estimation |
 | **handoff** | Structured session handoff briefing documentation |
+| **health** | Comprehensive workspace, binary, and hook health diagnostics |
 | **interview** | Interactive requirement and trade-off clarification interview |
 | **learn** | Extract reusable developer conventions into Antigravity rules |
 | **mcp-audit** | Audit MCP server definitions for hidden instructions |
+| **memory-prune** | Session memory and context window optimization |
 | **multi-review** | Adversarial 4-lens code review (Security, Correctness, Perf, Tests) |
+| **notifier** | Native OS desktop notification integration for completion |
 | **perf** | Performance audit and resource bottleneck identification |
 | **pr** | Pull request generator with pre-flight branch and secret checks |
 | **profile** | Inspect and configure runtime performance profiles |
@@ -95,7 +102,10 @@ supercharger cache-clear                # Purge local audit trails and temporary
 | **ste** | Self-Testing Engine protocol for pre-flight verification |
 | **strict** | Time-boxed confirmation mode overriding autopilot |
 | **stuck** | Break out of debugging loops and cognitive deadlocks |
+| **supercharger** | Router and command catalog matching situations to skills |
 | **think** | Deep deliberation and counter-argument analysis |
+| **trust-mcp** | Authorize trusted MCP servers for elicitation |
+| **unslop** | Redesign generic AI interfaces into distinct, intentional products |
 | **why** | Root-cause causal analysis using the 5-Whys methodology |
 
 ---

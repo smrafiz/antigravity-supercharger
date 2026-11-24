@@ -21,7 +21,7 @@ fn main() {
         "post-tool" => handle_post_tool(),
         "session-start" => handle_session_start(),
         "stop" => handle_stop(),
-        "statusline" => handle_statusline(),
+        "statusline" => handle_statusline(&args[2..]),
         "autopilot" => handle_autopilot_cli(&args[2..]),
         "readonly" => handle_readonly_cli(&args[2..]),
         "strict" => handle_strict_cli(&args[2..]),
@@ -284,12 +284,13 @@ fn handle_stop() {
     println!("{}", serde_json::to_string(&StopDecision::stop()).unwrap());
 }
 
-fn handle_statusline() {
+fn handle_statusline(args: &[String]) {
+    let compact = args.iter().any(|a| a == "--compact" || a == "-c");
     let mut buffer = String::new();
     let _ = io::stdin().read_to_string(&mut buffer);
     let _ = std::fs::write("/tmp/supercharger-statusline-input.json", &buffer);
     let input: statusline::StatusLineInput = serde_json::from_str(&buffer).unwrap_or_default();
-    statusline::render(&input);
+    statusline::render(&input, compact);
 }
 
 // -----------------------------------------------------------------------------

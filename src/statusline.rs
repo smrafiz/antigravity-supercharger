@@ -257,7 +257,7 @@ pub fn calculate_equiv_cost(
         + (total_out as f64 * out_rate / 1_000_000.0)
 }
 
-pub fn render(input: &StatusLineInput) {
+pub fn render(input: &StatusLineInput, compact: bool) {
     // ANSI formatting
     let bold = "\x1b[1m";
     let dim = "\x1b[2m";
@@ -366,7 +366,7 @@ pub fn render(input: &StatusLineInput) {
     // ==========================================
     // LINE 1: Model | Project | Branch | Eco | Autopilot | Diff
     // ==========================================
-    println!(
+    let line1 = format!(
         "{cyan}[{model_name}]{reset} {bold}{project_name}{reset} {dim}|{reset} {yellow}{branch}{reset}{eco_str}{autopilot_str}{lines_str}"
     );
 
@@ -442,7 +442,7 @@ pub fn render(input: &StatusLineInput) {
         }
     };
 
-    println!(
+    let line2 = format!(
         "{bar_color}{bar}{reset} {dim}Context:{reset} {ctx_display} {dim}|{reset} {dim}Time:{reset} {time_str} {dim}|{reset} {cache_str}"
     );
 
@@ -568,11 +568,23 @@ pub fn render(input: &StatusLineInput) {
         String::new()
     };
 
-    println!(
+    let line3 = format!(
         "{dim}Tokens:{reset} {}/{yellow}${:.2} equiv{reset}{sub_str}{quota_str}",
         fmt_tokens(total_tokens),
         cost_val
     );
+
+    if compact {
+        println!(
+            "{cyan}[{model_name}]{reset} {bold}{project_name}{reset} {dim}|{reset} {yellow}{branch}{reset}{eco_str}{autopilot_str} {dim}|{reset} {dim}Ctx:{reset} {ctx_pct}% {dim}|{reset} {dim}Tokens:{reset} {}/{yellow}${:.2}{reset}{quota_str}",
+            fmt_tokens(total_tokens),
+            cost_val
+        );
+    } else {
+        println!("{line1}");
+        println!("{line2}");
+        println!("{line3}");
+    }
 }
 
 #[cfg(test)]
@@ -613,6 +625,7 @@ mod tests {
         }"#;
 
         let input: StatusLineInput = serde_json::from_str(raw).unwrap();
-        render(&input);
+        render(&input, false);
+        render(&input, true);
     }
 }
