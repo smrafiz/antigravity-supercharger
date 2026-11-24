@@ -60,11 +60,12 @@ supercharger status                     # Display active modes and guard health
 supercharger audit 25                   # Inspect last 25 security audit events
 supercharger cache-stats                # Display prompt cache savings and audit metrics
 supercharger cache-clear                # Purge local audit trails and temporary cache
+supercharger update                     # Check for and apply latest Supercharger updates
 ```
 
 ---
 
-## Skills Catalog (39 Skills Available)
+## Skills Catalog (40 Skills Available)
 
 | Skill | Description |
 |---|---|
@@ -106,6 +107,7 @@ supercharger cache-clear                # Purge local audit trails and temporary
 | **think** | Deep deliberation and counter-argument analysis |
 | **trust-mcp** | Authorize trusted MCP servers for elicitation |
 | **unslop** | Redesign generic AI interfaces into distinct, intentional products |
+| **update** | Check for and apply Antigravity Supercharger updates from GitHub |
 | **why** | Root-cause causal analysis using the 5-Whys methodology |
 
 ---

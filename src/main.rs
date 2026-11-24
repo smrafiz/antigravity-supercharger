@@ -31,6 +31,7 @@ fn main() {
         "cache-clear" => handle_cache_clear_cli(),
         "doctor" => handle_doctor_cli(),
         "status" => handle_status_cli(),
+        "update" => handle_update_cli(),
         "version" | "--version" | "-v" => {
             println!("Antigravity Supercharger v{}", VERSION);
         }
@@ -57,6 +58,7 @@ fn print_help() {
     println!("  economy   [minimal|lean|standard]      Switch prompt token economy tier");
     println!("  audit     [limit]                      View recent security and audit log entries");
     println!("  status                                 Display Supercharger health and active modes");
+    println!("  update                                 Check for and apply Supercharger updates");
     println!("  version                                Print version");
 }
 
@@ -588,4 +590,58 @@ fn handle_cache_clear_cli() {
     }
     let _ = std::fs::remove_file("/tmp/supercharger-statusline-input.json");
     println!("✔ Supercharger cache & temporary state cleared.");
+}
+
+fn handle_update_cli() {
+    println!("\x1b[1m⚡ Antigravity Supercharger Updater\x1b[0m");
+    println!("Current version: v{}", VERSION);
+
+    let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+    let plugin_dir = std::path::Path::new(&home).join(".gemini/config/plugins/supercharger");
+    let target_dir = std::fs::canonicalize(&plugin_dir).unwrap_or(plugin_dir);
+
+    if target_dir.join(".git").exists() {
+        println!("Checking for updates in {}...", target_dir.display());
+        let status = std::process::Command::new("git")
+            .args(["-C", &target_dir.to_string_lossy(), "pull", "--ff-only"])
+            .status();
+
+        if let Ok(st) = status {
+            if st.success() {
+                println!("Rebuilding release binary...");
+                let install_sh = target_dir.join("install.sh");
+                if install_sh.exists() {
+                    let _ = std::process::Command::new("bash")
+                        .arg(&install_sh)
+                        .current_dir(&target_dir)
+                        .status();
+                }
+                println!("\x1b[32m✔ Antigravity Supercharger successfully updated.\x1b[0m");
+                return;
+            }
+        }
+    }
+
+    println!("Checking GitHub releases for updates...");
+    let curl_out = std::process::Command::new("curl")
+        .args(["-sSL", "https://api.github.com/repos/smrafiz/antigravity-supercharger/releases/latest"])
+        .output();
+
+    if let Ok(out) = curl_out {
+        if let Ok(val) = serde_json::from_slice::<serde_json::Value>(&out.stdout) {
+            if let Some(tag) = val.get("tag_name").and_then(|t| t.as_str()) {
+                let latest_ver = tag.trim_start_matches('v');
+                if latest_ver == VERSION {
+                    println!("\x1b[32m✔ Antigravity Supercharger is already up to date (v{}).\x1b[0m", VERSION);
+                    return;
+                } else {
+                    println!("New version available: {} (current: v{})", tag, VERSION);
+                    println!("To update, run: git -C {} pull && bash {}/install.sh", target_dir.display(), target_dir.display());
+                    return;
+                }
+            }
+        }
+    }
+
+    println!("✔ Antigravity Supercharger v{} is up to date.", VERSION);
 }

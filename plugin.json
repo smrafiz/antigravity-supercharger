@@ -1,6 +1,7 @@
 {
   "name": "supercharger",
   "version": "0.1.0",
+  "logo": "assets/logo.svg",
   "author": {
     "name": "smrafiz"
   },
