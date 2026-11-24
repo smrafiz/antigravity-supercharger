@@ -10,38 +10,99 @@
 
 ## Highlights
 
-- **Sub-millisecond execution (< 1ms)**: Built in Rust with zero runtime dependencies. No Python or Node.js startup lag.
-- **Dynamic 3-Line Statusline**: Real-time context usage bar, actual cache hit ratio with saved token metrics, live git branch and uncommitted numstat diff (`+X/-Y`), session duration, and quota burn.
+- **Sub-millisecond execution (30 µs latency)**: Built in pure Rust with zero runtime dependencies. Eliminates Python and Node.js process startup lag completely.
+- **Dynamic 3-Line Statusline**: Live context bar, accurate prompt cache hit ratio with saved token metrics, uncommitted diff (`+X/-Y`), session stopwatch, API equivalent costs, and rolling quota resets (`gemini-5h` / `weekly`).
 - **Workflow Modes**:
-  - **Autopilot (`/autopilot`)**: Time-boxed auto-approval of safe operations so you aren't interrupted by repetitive prompts during autonomous runs.
-  - **Read-Only (`/readonly`)**: Time-boxed "look, don't touch" review mode that blocks file writes and mutating commands while allowing inspections and searches.
-  - **Strict (`/strict`)**: Time-boxed "ask me everything" mode requiring user confirmation on all actions (overrides autopilot).
-- **Destructive Command Prevention**: Blocks `rm -rf /`, `DROP TABLE`, `mkfs`, fork bombs, and curl-pipe-to-shell before execution outside model prompt control.
-- **Git Guardrails**: Blocks force-pushing to `main`/`master`, warns on `git reset --hard` and `git clean -f`.
-- **Path & Boundary Guard**: Enforces workspace directory boundaries, blocks directory traversal (`../`), and protects `.git/hooks` and system credential folders (`~/.ssh`, `~/.aws`).
-- **Code Security & Secret Scanner**: Scans writes and edits in real-time for hardcoded API keys (AWS, OpenAI, GitHub, Slack, Private Keys) and dangerous patterns (`pickle.load`, raw SQL injection).
-- **Loop Detection**: Automatically flags repetitive tool loops (3 identical tool calls in 30 seconds).
-- **Integrated Audit Trail**: Redacts secrets and logs all tool executions to `.supercharger/audit.jsonl`.
+  - **Autopilot (`supercharger autopilot [dur] [--full]`)**: Auto-approves safe tool calls during autonomous runs.
+  - **Read-Only (`supercharger readonly [dur]`)**: Blocks file writes, modifications, and mutating commands.
+  - **Strict (`supercharger strict [dur]`)**: Forces confirmation prompts on every action.
+  - **Economy (`supercharger economy [minimal|lean|standard]`)**: Switches model prompt verbosity tier with dynamic rule injection.
+- **Safety & Guardrails**:
+  - **Destructive Command Guard**: Blocks `rm -rf /`, `mkfs`, fork bombs, SQL database drops, and reverse shells (`nc -e`, `/dev/tcp/`).
+  - **Cloud & IaC Protection**: Intercepts `terraform destroy`, AWS EC2/RDS/S3 bulk delete, GCP project/compute deletion, Azure resource group wipe, and Kubernetes namespace removal.
+  - **Git Guardrails**: Blocks force-pushes to `main`/`master`, warns on `git reset --hard`, `git commit --amend`, and `git commit/push --no-verify`.
+  - **File Clobbering & Exfiltration**: Intercepts shell redirection truncation (`> file.rs`, `truncate -s 0`) and credential exfiltration via `curl`/`wget`.
+  - **Secret Scanner**: Real-time scanning & redaction of API keys (AWS, OpenAI, GitHub, Slack, Private Keys).
+  - **Prompt Injection Defense**: Scans tool outputs and file edits for adversarial tags (`<IMPORTANT>`, `<SYSTEM>`) and instruction overrides (`ignore all previous instructions`).
+  - **Loop Detector**: Intercepts repetitive agent cycles (3 identical tool calls in 30 seconds).
 
 ---
 
 ## 3-Line Statusline Preview
 
-```
-[Gemini 3.8 Flash] antigravity-supercharger | main | Eco: Minimal · Concise | ⚡ Supercharger: active | +28/-14
-██░░░░░░░░░░░░░░░░░░ Context: 11% (125.4K/1.0M) | Time: 2m 22s | cache 100% (~99.0K saved)
-Tokens: 126.6K/$0.18 equiv | Session: 25% (resets: 3h 0m) · Weekly: 14%
+```text
+[Gemini 3.8 Flash (High)] antigravity-supercharger | main | Eco: Minimal | ⚡ Autopilot (full): 479m left
+█░░░░░░░░░░░░░░░░░░░ Context: 6% (58.7K/1.0M) | Time: 2m 22s | cache 100% (~47.0K saved)
+Tokens: 270.1K/$0.06 equiv | Session: 0% (resets: 4h 56m) · Weekly: 0%
 ```
 
-- **Line 1**: Model | Workspace name | Git branch | Economy tier | Autopilot badge | Uncommitted diff (`+X/-Y`)
-- **Line 2**: Context usage progress bar | Exact used/max token ratio | Elapsed time | Dynamic cache hit ratio & tokens saved
-- **Line 3**: Total tokens / USD cost | Subagent token & spend breakdown (when active) | Real-time session & weekly quota resets
+- **Line 1**: Model | Current workspace | Git branch | Economy tier | Autopilot/Supercharger badge
+- **Line 2**: Context visual bar | Exact used/max token ratio | Session duration | Cache hit % & saved tokens
+- **Line 3**: Total tokens & API equivalent cost | Real-time session & weekly quota resets (`gemini-5h`, `weekly`)
 
 ---
 
-## Installation & Automatic Activation
+## CLI Reference
 
-### 1-Step Install (Globally Activated Across All Projects)
+```bash
+# Workflow Modes
+supercharger autopilot 2h --full        # Enable full autopilot for 2 hours
+supercharger readonly 1h                # Enable read-only mode for 1 hour
+supercharger strict 30m                 # Enable strict prompt confirmation
+supercharger economy minimal            # Switch economy tier (minimal, lean, standard)
+
+# Diagnostics & Auditing
+supercharger doctor                     # Run comprehensive diagnostic benchmark
+supercharger status                     # Display active modes and guard health
+supercharger audit 25                   # Inspect last 25 security audit events
+supercharger cache-stats                # Display prompt cache savings and audit metrics
+supercharger cache-clear                # Purge local audit trails and temporary cache
+```
+
+---
+
+## Skills Catalog (32 Skills Available)
+
+| Skill | Description |
+|---|---|
+| **audit** | Workspace security audit against Supercharger safety rules |
+| **autopilot** | Time-boxed auto-approval of safe operations |
+| **cache-clear** | Safely clear local audit logs and temporary cache |
+| **cache-stats** | Prompt cache hit ratio, token savings, and audit statistics |
+| **challenge** | Adversarial red-team challenge to stress-test designs and PRs |
+| **cleanup** | Repository hygiene, stale branch cleanup, and cache pruning |
+| **de-ai** | Strip AI buzzwords and robotic corporate filler from text and PRs |
+| **design** | Structured architecture and system design review |
+| **devlog** | Structured development logs capturing decisions and changes |
+| **doctor** | Diagnostic health check of Supercharger binary and hooks |
+| **economy** | Switch token economy tier (minimal, lean, standard) |
+| **estimate** | Context window headroom and equivalent API cost estimation |
+| **handoff** | Structured session handoff briefing documentation |
+| **interview** | Interactive requirement and trade-off clarification interview |
+| **learn** | Extract reusable developer conventions into Antigravity rules |
+| **mcp-audit** | Audit MCP server definitions for hidden instructions |
+| **multi-review** | Adversarial 4-lens code review (Security, Correctness, Perf, Tests) |
+| **perf** | Performance audit and resource bottleneck identification |
+| **pr** | Pull request generator with pre-flight branch and secret checks |
+| **profile** | Inspect and configure runtime performance profiles |
+| **readonly** | Time-boxed read-only mode blocking file modifications |
+| **receipts** | Verify cryptographic audit trail records and receipts |
+| **reflect** | Score session quality against concrete evidence |
+| **resolve-conflicts** | Guided resolution of git merge, rebase, and cherry-pick conflicts |
+| **sc-status** | Display Supercharger status and active guardrails |
+| **scope** | Scope creep detector and blast-radius evaluator |
+| **security** | Deep security audit against OWASP Top 10 and injection sinks |
+| **ste** | Self-Testing Engine protocol for pre-flight verification |
+| **strict** | Time-boxed confirmation mode overriding autopilot |
+| **stuck** | Break out of debugging loops and cognitive deadlocks |
+| **think** | Deep deliberation and counter-argument analysis |
+| **why** | Root-cause causal analysis using the 5-Whys methodology |
+
+---
+
+## Installation
+
+### 1-Step Global Installation
 
 ```bash
 git clone https://github.com/smrafiz/antigravity-supercharger.git
@@ -49,77 +110,10 @@ cd antigravity-supercharger
 bash install.sh
 ```
 
-`install.sh` builds the optimized release binary, symlinks the plugin into Antigravity's global plugin store (`~/.gemini/config/plugins/supercharger`), and configures `statusLine.command` in `~/.gemini/antigravity-cli/settings.json`.
-
-Verify installation:
-```bash
-agy plugin list
-# Output:
-# Installed plugins:
-# - supercharger (enabled, 0.1.0)
-#     Components: 7 skills, 1 rule, 1 hook
-```
-
----
-
-## Commands & Modes
-
-### CLI Commands
-
-```bash
-# Check Supercharger status and active modes
-supercharger status
-
-# Switch Token Economy tier (controls model verbosity & saves tokens)
-supercharger economy minimal
-supercharger economy lean
-supercharger economy standard
-supercharger economy status
-
-# Auto-approve safe actions for 30 minutes
-supercharger autopilot 30m
-supercharger autopilot 1h --full
-supercharger autopilot off
-
-# Lock workspace to read-only for 1 hour
-supercharger readonly 1h
-supercharger readonly off
-
-# Enable strict confirmation mode
-supercharger strict 45m
-supercharger strict off
-
-# View recent blocked actions in the audit log
-supercharger audit 15
-```
-
-### Slash Skills (in Antigravity Chat)
-
-- **`/economy`**: Switch prompt verbosity tier (`minimal`, `lean`, `standard`).
-- **`/autopilot`**: Toggle time-boxed auto-approval.
-- **`/readonly`**: Toggle "look, don't touch" mode.
-- **`/strict`**: Toggle strict confirmation prompts.
-- **`/sc-status`**: Check health of guardrails and active modes.
-- **`/audit`**: Audit the workspace for uncommitted risk and secrets.
-- **`/interview`**: Deep interactive requirement interview before coding.
-- **`/devlog`**: Generate structured development log entries.
-
----
-
-## Architecture
-
-```
-Antigravity CLI (agy)
-       │
-       ├── PreToolUse    ──▶ bin/supercharger pre-tool     ──▶ Allow / Deny / Ask
-       ├── PostToolUse   ──▶ bin/supercharger post-tool    ──▶ Loop Detection & Audit
-       ├── SessionStart  ──▶ bin/supercharger session-start──▶ Startup Banner
-       ├── Stop          ──▶ bin/supercharger stop         ──▶ Quality Gate
-       └── statusLine    ──▶ bin/supercharger statusline   ──▶ 3-Line Dynamic Status
-```
+The installer compiles the release Rust binary, links the plugin globally to `~/.gemini/config/plugins/supercharger`, and activates safety hooks across all your workspaces automatically.
 
 ---
 
 ## License
 
-MIT License — Developed by [smrafiz](https://github.com/smrafiz).
+MIT License. See [LICENSE](LICENSE) for details.

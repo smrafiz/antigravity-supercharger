@@ -27,6 +27,8 @@ fn main() {
         "strict" => handle_strict_cli(&args[2..]),
         "economy" => handle_economy_cli(&args[2..]),
         "audit" => handle_audit_cli(&args[2..]),
+        "cache-stats" => handle_cache_stats_cli(),
+        "cache-clear" => handle_cache_clear_cli(),
         "doctor" => handle_doctor_cli(),
         "status" => handle_status_cli(),
         "version" | "--version" | "-v" => {
@@ -528,4 +530,49 @@ fn handle_doctor_cli() {
 
     println!("--------------------------------------------------");
     println!("\x1b[32m✔ Verdict: All Supercharger systems healthy and operational.\x1b[0m");
+}
+
+fn handle_cache_stats_cli() {
+    println!("\x1b[1m⚡ Supercharger Cache & Security Stats\x1b[0m");
+    println!("--------------------------------------------------");
+
+    let events = audit::get_recent_events(Some("."), 1000);
+    let total = events.len();
+    let blocked = events.iter().filter(|e| e.get("blocked").and_then(|v| v.as_bool()).unwrap_or(false)).count();
+    let allowed = total.saturating_sub(blocked);
+
+    println!("Audit Log Entries: {:>6}", total);
+    println!("Allowed Operations: {:>5}", allowed);
+    println!("Blocked Operations: {:>5}", blocked);
+
+    // Read statusline input cache metrics if available
+    if let Ok(content) = std::fs::read_to_string("/tmp/supercharger-statusline-input.json") {
+        if let Ok(input) = serde_json::from_str::<statusline::StatusLineInput>(&content) {
+            if let Some(cw) = &input.context_window {
+                let cached = cw.current_usage.as_ref().and_then(|u| u.cache_read_input_tokens).unwrap_or(0);
+                let input_tok = cw.total_input_tokens.unwrap_or(0);
+                let ratio = if input_tok + cached > 0 {
+                    (cached as f64 / (input_tok + cached) as f64) * 100.0
+                } else {
+                    100.0
+                };
+                println!("Prompt Cache Hit:  {:>5.1}% (~{} tokens saved)", ratio, statusline::fmt_tokens(cached));
+            }
+        }
+    }
+
+    let eco = modes::get_economy_tier(".");
+    println!("Active Economy:    \x1b[32m{}\x1b[0m", eco.to_uppercase());
+}
+
+fn handle_cache_clear_cli() {
+    let p = std::path::Path::new(".supercharger/audit.jsonl");
+    if p.exists() {
+        let _ = std::fs::remove_file(p);
+        println!("✔ Cleared .supercharger/audit.jsonl");
+    } else {
+        println!("No local audit log to clear.");
+    }
+    let _ = std::fs::remove_file("/tmp/supercharger-statusline-input.json");
+    println!("✔ Supercharger cache & temporary state cleared.");
 }
