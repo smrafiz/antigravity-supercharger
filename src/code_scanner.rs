@@ -34,6 +34,10 @@ fn get_secret_patterns() -> &'static Vec<(Regex, &'static str)> {
                 "Cryptographic Private Key detected",
             ),
             (
+                Regex::new(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b").unwrap(),
+                "JSON Web Token (JWT) secret detected",
+            ),
+            (
                 Regex::new(r#"(?i)(?:api[_-]?key|secret[_-]?key|auth[_-]?token)\s*[:=]\s*["'][A-Za-z0-9_\-]{20,}["']"#).unwrap(),
                 "Hardcoded API key/secret assignment detected",
             ),

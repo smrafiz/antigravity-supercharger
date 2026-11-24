@@ -8,7 +8,8 @@ echo "=== Building Antigravity Supercharger (Rust) ==="
 RUSTC_WRAPPER="" cargo build --release --offline || RUSTC_WRAPPER="" cargo build --release
 
 mkdir -p bin
-cp target/release/antigravity-supercharger bin/supercharger
+cp target/release/antigravity-supercharger bin/supercharger.tmp
+mv -f bin/supercharger.tmp bin/supercharger
 chmod +x bin/supercharger
 
 echo "=== Testing Supercharger Binary ==="

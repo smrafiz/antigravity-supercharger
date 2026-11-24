@@ -38,6 +38,14 @@ pub fn check_path(file_path: &str, workspace_paths: &[String]) -> Option<PathVer
         });
     }
 
+    // 3b. Python .pth backdoor persistence
+    if normalized.ends_with(".pth") && !normalized.contains("/tests/") && !normalized.contains("/test/") {
+        return Some(PathVerdict {
+            is_fatal: false,
+            reason: format!("Writing Python .pth file '{}' executes code on startup; confirmation required", file_path),
+        });
+    }
+
     // 4. Verify boundary: if absolute path, must be inside workspace or allowed system/artifact directories
     if Path::new(file_path).is_absolute() {
         // System temp and agent scratch/artifact directories are permitted
@@ -92,5 +100,13 @@ mod tests {
         let ws = vec!["/Users/srafiz/GithubProjects/app".to_string()];
         assert!(check_path("/Users/srafiz/GithubProjects/app/src/main.rs", &ws).is_none());
         assert!(check_path("/Users/srafiz/.ssh/id_rsa", &ws).is_some());
+    }
+
+    #[test]
+    fn test_pth_file_detection() {
+        let ws = vec!["/Users/srafiz/GithubProjects/app".to_string()];
+        let v = check_path("/Users/srafiz/GithubProjects/app/backdoor.pth", &ws).unwrap();
+        assert!(!v.is_fatal);
+        assert!(v.reason.contains(".pth"));
     }
 }
