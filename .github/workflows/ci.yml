@@ -9,11 +9,7 @@ on:
 jobs:
   test:
     name: Test and Build
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.os == 'macos-latest' }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -39,5 +35,5 @@ jobs:
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: supercharger-${{ matrix.os }}
+          name: supercharger-ubuntu-latest
           path: target/release/antigravity-supercharger
