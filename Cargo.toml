@@ -1,6 +1,6 @@
 [package]
 name = "antigravity-supercharger"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Starter Developer (smrafiz)"]
 description = "Fast, memory-safe guardrails and security hooks for Google Antigravity CLI written in Rust."
