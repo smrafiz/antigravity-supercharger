@@ -61,6 +61,15 @@ impl PreToolDecision {
         }
     }
 
+    pub fn allow_with_overrides(overrides: Vec<String>) -> Self {
+        Self {
+            decision: "allow".to_string(),
+            reason: None,
+            permission_overrides: Some(overrides),
+            overwrite: None,
+        }
+    }
+
     pub fn deny(reason: impl Into<String>) -> Self {
         Self {
             decision: "deny".to_string(),

@@ -215,6 +215,18 @@ fn handle_pre_tool() {
 
         // Default allow
         audit::log_event(Some(cwd), tool_name, "tool_executed", false, None);
+
+        let autopilot = modes::is_autopilot_active(cwd, session_id);
+        if autopilot.is_some() {
+            let mut overrides = Vec::new();
+            if let Some(cmd) = tool_call.get_str_arg("CommandLine") {
+                overrides.push(format!("command({})", cmd));
+            }
+            if !overrides.is_empty() {
+                println!("{}", serde_json::to_string(&PreToolDecision::allow_with_overrides(overrides)).unwrap());
+                return;
+            }
+        }
     }
 
     println!("{}", serde_json::to_string(&PreToolDecision::allow()).unwrap());
