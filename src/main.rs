@@ -236,6 +236,32 @@ fn handle_post_tool() {
         }
     }
 
+    // Scan tool output / response for injected prompt markers
+    let output_str_opt = input
+        .tool_response
+        .as_ref()
+        .or(input.tool_result.as_ref())
+        .or(input.tool_output.as_ref())
+        .map(|v| {
+            if let Some(s) = v.as_str() {
+                s.to_string()
+            } else {
+                v.to_string()
+            }
+        });
+
+    if let Some(output_str) = output_str_opt {
+        let findings = code_scanner::scan_content(&output_str);
+        for finding in findings {
+            if !finding.is_secret {
+                eprintln!(
+                    "\x1b[33mSupercharger Warning: Untrusted tool output contains prompt injection payload: {}\x1b[0m",
+                    finding.description
+                );
+            }
+        }
+    }
+
     println!("{{}}");
 }
 
