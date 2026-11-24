@@ -11,7 +11,7 @@ jobs:
     name: Test and Build
     strategy:
       matrix:
-        os: [macos-latest, macos-13, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
