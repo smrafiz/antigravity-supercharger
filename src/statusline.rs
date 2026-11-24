@@ -186,7 +186,7 @@ pub fn get_git_info(cwd: &str) -> (String, u64, u64) {
 }
 
 pub fn get_session_duration_secs(
-    cwd: &str,
+    _cwd: &str,
     session_id: Option<&str>,
     cost_dur_ms: Option<u64>,
 ) -> u64 {
@@ -201,28 +201,29 @@ pub fn get_session_duration_secs(
         .map(|d| d.as_secs())
         .unwrap_or(0);
 
-    let sid = session_id.unwrap_or("default");
+    let sid_owned;
+    let sid = match session_id {
+        Some(s) if !s.trim().is_empty() => s.trim(),
+        _ => {
+            #[cfg(unix)]
+            {
+                sid_owned = format!("pid-{}", std::os::unix::process::parent_id());
+                &sid_owned
+            }
+            #[cfg(not(unix))]
+            {
+                sid_owned = "default".to_string();
+                &sid_owned
+            }
+        }
+    };
+
     let start_file = std::env::temp_dir().join(format!(".supercharger-start-{}", sid));
 
     if let Ok(content) = fs::read_to_string(&start_file) {
         if let Ok(st) = content.trim().parse::<u64>() {
             if now >= st {
                 return now - st;
-            }
-        }
-    }
-
-    // Try finding earliest timestamp from .supercharger/audit.jsonl
-    let audit_file = Path::new(cwd).join(".supercharger").join("audit.jsonl");
-    if let Ok(content) = fs::read_to_string(audit_file) {
-        if let Some(first_line) = content.lines().next() {
-            if let Ok(v) = serde_json::from_str::<serde_json::Value>(first_line) {
-                if let Some(ts) = v.get("timestamp").and_then(|t| t.as_u64()) {
-                    if now >= ts {
-                        let _ = fs::write(&start_file, ts.to_string());
-                        return now - ts;
-                    }
-                }
             }
         }
     }
